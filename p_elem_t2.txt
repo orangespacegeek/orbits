@@ -12,7 +12,7 @@ Keplerian elements and their rates, with respect to the mean ecliptic and equino
 valid for the time-interval 3000 BC -- 3000 AD.  NOTE: the computation of M for Jupiter through
 Pluto *must* be augmented by the additional terms given in Table 2b (below).
 
-               a              e               I                L            long.peri.      long.node.
+               a              e        4      I                L            long.peri.     long.node.
            AU, AU/Cy     rad, rad/Cy     deg, deg/Cy      deg, deg/Cy      deg, deg/Cy     deg, deg/Cy
 ------------------------------------------------------------------------------------------------------
 Mercury   0.38709843      0.20563661      7.00559432      252.25166724     77.45771895     48.33961819

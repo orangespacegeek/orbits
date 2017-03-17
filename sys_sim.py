@@ -79,24 +79,73 @@ def extract_planets():
 
 
 def adv_planet(TLE, date, adjust):
-  a = TLE[0]
-  e = TLE[1]
-  i = TLE[2]
-  L = TLE[3]
-  longperi = TLE[4]
-  longnode = TLE[5]
-  da = TLE[6]
-  de = TLE[7]
-  di = TLE[8]
-  dL = TLE[9]
-  dlongperi = TLE[10]
-  dlongnode = TLE[11]
+  #advances individual body from p_elem_t2.txt and outputs an updated TLE
+  T = (date-2451545)/36525 #Time adjustment for equations to use best fit
+  # updates the TLE to the appropriate position based on the Julian date
+  a = TLE[0]+TLE[6]*T
+  e = TLE[1]+TLE[7]*T
+  i = TLE[2]+TLE[8]*T
+  L = TLE[3]+TLE[9]*T
+  longperi = TLE[4]+TLE[10]*T
+  longnode = TLE[5]+TLE[11]*T
+  # checks the adjust input and assigns b,c,s,f if available or zeros 
+  if len(adjust) > 0:
+  	b = adjust[0]
+  	c = adjust[1]
+  	s = ajdust[2]
+  	f = adjust[3]
+  else:
+  	b = 0
+  	c = 0
+  	s = 0
+  	f = 0
+  # computes the additional traditional TLE for R & V computation, 
+  # argument of perihelion (arg_peri) and the mean anomaly (mean)
+  arg_peri = longperi - longnode
+  mean_anom = L - longperi + b*T*T+c*np.cos(f*T) + np.sin(f*T)
   
-  #for element in rankname_list:
-  #	element_nu = element[4:-5]
-  #	rank_name_nu.append(element_nu)
-  #return rank_name_nu
-  return
+  M_0 = mean_anom%pi
+  E = M_0 + e*np.sin(M_0)
+  M = M_0
+  dE = 1
+  n = 0
+  while dE>0.0000001 and n < 1000000:
+  	dM = M - (E - e*np.sin(E))
+  	dE = dM/(1-e*np.cos(E))
+  	E = E + dE
+  	M = E - e*np.sin(E)
+  	n = n + 1
+
+  TLE_nu = [a, e, i, longnode, arg_peri, E]
+
+  return TLE_nu
+
+def radius(TLE):
+	#Computes the radius vector of the object given its current TLE to a reference plane
+	#For heliocentric objects, reference plane is J2000 ecliptic
+	#Heliocentric coordinates in its orbital plane, x-axis aligned from focus to perihelion
+	a = TLE[0]
+	ecc = TLE[1]
+	I = TLE[2]
+	longnode = TLE[3]
+	arg_peri = TLE[4]
+	E = TLE[5]
+	x_prime = a*(np.cos(E)-ecc)
+	y_prime = a*np.sqrt(1-ecc*ecc)*np.sin(E)
+	z_prime = 0
+
+	x_ecl = float((np.cos(arg_peri)*np.cos(longnode)-np.sin(arg_peri)*np.sin(longnode)*np.cos(I))*x_prime + (-np.sin(arg_peri)*np.cos(longnode)-np.cos(arg_peri)*np.sin(longnode)*np.cos(I))*y_prime)
+	y_ecl = float((np.cos(arg_peri)*np.sin(longnode)+np.sin(arg_peri)*np.cos(longnode)*np.cos(I))*x_prime + (-np.sin(arg_peri)*np.sin(longnode)+np.cos(arg_peri)*np.cos(longnode)*np.cos(I))*y_prime)
+	z_ecl = float((np.sin(arg_peri)*np.sin(I))*x_prime + (np.cos(arg_peri)*np.sin(I))*y_prime)
+
+	R_vec = [x_ecl, y_ecl, z_ecl]
+
+	return R_vec
+
+def velocity(TLE):
+	#Computes the velocity vector of the object given its current TLE
+	V_vec = 0
+	return V_vec
 
 def main():
 	
@@ -104,13 +153,27 @@ def main():
 	
 	TLE_DB = extract_planets()
 
-	TLE_now = adv_planet(TLE_DB['Mars'][0], JD_now, TLE_DB['Mars'][1])
+	TLE_EM_now = adv_planet(TLE_DB['EM Bary'][0], JD_now, TLE_DB['EM Bary'][1])
+
+	TLE_Mars_now = adv_planet(TLE_DB['Mars'][0], JD_now, TLE_DB['Mars'][1])
+
+	R_EM = radius(TLE_EM_now)
+
+	R_Mars = radius(TLE_Mars_now)
+
+	dist = vec_sep(R_Mars, R_EM)
 
 	print ('')
 
-	print('Mars: ', TLE_DB['Mars'][0]) #prints Mars adjustment []
-	print('Jupiter:', TLE_DB['Jupiter'][0]) #prints Jupiter TLE
-
+	print('Earth-Moon TLE', TLE_EM_now)
+	print('Earth-Moon Semi-Major Axis (AU):', TLE_EM_now[0]) #prints semi-major axis for Earth-Moon
+	print('Earth-Moon Radius (AU): ', np.sqrt(R_EM[0]*R_EM[0]+R_EM[1]*R_EM[1]+R_EM[2]*R_EM[2])) #prints updated Earth-Moon heliocentric radius
+	
+	print('Mars Semi-Major Axis (AU):', TLE_Mars_now[0]) #prints semi-major axis for Earth-Moon
+	print('Mars Radius (AU):', np.sqrt(R_Mars[0]*R_Mars[0]+R_Mars[1]*R_Mars[1]+R_Mars[2]*R_Mars[2])) #prints updated Mars heliocentric radius
+  #spacer
+  
+	print('Seperation (AU):', dist)
 	print ('')
 
 if __name__ == '__main__':
