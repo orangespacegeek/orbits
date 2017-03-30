@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import datetime
 import math
@@ -92,7 +93,7 @@ def adv_planet(TLE, date, adjust):
   if len(adjust) > 0:
   	b = adjust[0]
   	c = adjust[1]
-  	s = ajdust[2]
+  	s = adjust[2]
   	f = adjust[3]
   else:
   	b = 0
@@ -131,50 +132,63 @@ def radius(TLE):
 	arg_peri = TLE[4]
 	E = TLE[5]
 	x_prime = a*(np.cos(E)-ecc)
-	y_prime = a*np.sqrt(1-ecc*ecc)*np.sin(E)
+	y_prime = a*np.sqrt(1-ecc**2)*np.sin(E)
 	z_prime = 0
 
 	x_ecl = float((np.cos(arg_peri)*np.cos(longnode)-np.sin(arg_peri)*np.sin(longnode)*np.cos(I))*x_prime + (-np.sin(arg_peri)*np.cos(longnode)-np.cos(arg_peri)*np.sin(longnode)*np.cos(I))*y_prime)
 	y_ecl = float((np.cos(arg_peri)*np.sin(longnode)+np.sin(arg_peri)*np.cos(longnode)*np.cos(I))*x_prime + (-np.sin(arg_peri)*np.sin(longnode)+np.cos(arg_peri)*np.cos(longnode)*np.cos(I))*y_prime)
 	z_ecl = float((np.sin(arg_peri)*np.sin(I))*x_prime + (np.cos(arg_peri)*np.sin(I))*y_prime)
 
-	R_vec = [x_ecl, y_ecl, z_ecl]
+	R_vec = np.array([x_ecl, y_ecl, z_ecl])
 
 	return R_vec
 
-def velocity(TLE):
-	#Computes the velocity vector of the object given its current TLE
-	V_vec = 0
-	return V_vec
-
-def main():
-	
+def test():
 	JD_now = sys_julian()
 	
 	TLE_DB = extract_planets()
 
 	TLE_EM_now = adv_planet(TLE_DB['EM Bary'][0], JD_now, TLE_DB['EM Bary'][1])
 
-	TLE_Mars_now = adv_planet(TLE_DB['Mars'][0], JD_now, TLE_DB['Mars'][1])
+	TLE_Jupiter_now = adv_planet(TLE_DB['Jupiter'][0], JD_now, TLE_DB['Jupiter'][1])
 
 	R_EM = radius(TLE_EM_now)
 
-	R_Mars = radius(TLE_Mars_now)
+	R_Jupiter = radius(TLE_Jupiter_now)
 
-	dist = vec_sep(R_Mars, R_EM)
+	dist = np.subtract(R_Jupiter, R_EM)
 
 	print ('')
 
+	print('Julian Date ', JD_now)
 	print('Earth-Moon TLE', TLE_EM_now)
 	print('Earth-Moon Semi-Major Axis (AU):', TLE_EM_now[0]) #prints semi-major axis for Earth-Moon
-	print('Earth-Moon Radius (AU): ', np.sqrt(R_EM[0]*R_EM[0]+R_EM[1]*R_EM[1]+R_EM[2]*R_EM[2])) #prints updated Earth-Moon heliocentric radius
+	print('Earth-Moon Radius (AU): ', np.linalg.norm(R_EM)) #prints updated Earth-Moon heliocentric radius
 	
-	print('Mars Semi-Major Axis (AU):', TLE_Mars_now[0]) #prints semi-major axis for Earth-Moon
-	print('Mars Radius (AU):', np.sqrt(R_Mars[0]*R_Mars[0]+R_Mars[1]*R_Mars[1]+R_Mars[2]*R_Mars[2])) #prints updated Mars heliocentric radius
+	print('Jupiter Semi-Major Axis (AU):', TLE_Jupiter_now[0]) #prints semi-major axis for Earth-Moon
+	print('Jupiter Radius (AU):', np.linalg.norm(R_Jupiter)) #prints updated Venus heliocentric radius
   #spacer
   
-	print('Seperation (AU):', dist)
+	print('Seperation (AU):', np.linalg.norm(dist))
 	print ('')
+	return
+
+def main():
+  args = sys.argv[1:]
+
+  if not args:
+    print('usage: [test] to test that sys_sim is functioning, otherwise, it is a funcction library for other programs')
+    sys.exit(1)
+
+  if args[0] == 'test':
+    test()
+ 
+  else:
+  	print('usage: [test] to test that sys_sim is functioning, otherwise, it is a funcction library for other programs')
+  # +++your code here+++
+  # For each filename, get the names, then either print the text output
+  # or write it to a summary file
+
 
 if __name__ == '__main__':
   main()
