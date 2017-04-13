@@ -1,5 +1,7 @@
 import numpy as np
 import datetime
+import sys_sim.py
+import keplar.py
 
 #---Solar System Constants---
 #dictonary of Solar System gravity parameters (m^3/s^2)
@@ -48,6 +50,7 @@ def julian(yr, mm, dd, ut):
 	return JD
 
 def truncate(n):
+	# truncates the solution to the units digit
 	m = n-n%1
 	return m
 

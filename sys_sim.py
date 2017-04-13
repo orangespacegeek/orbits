@@ -185,10 +185,6 @@ def main():
  
   else:
   	print('usage: [test] to test that sys_sim is functioning, otherwise, it is a funcction library for other programs')
-  # +++your code here+++
-  # For each filename, get the names, then either print the text output
-  # or write it to a summary file
-
 
 if __name__ == '__main__':
   main()
